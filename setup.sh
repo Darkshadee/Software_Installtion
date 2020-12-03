@@ -47,7 +47,7 @@ domainjoin(){
         cd /tmp
         echo "10" ; sleep 3
         echo "# Downloading Packages ..."
-        wget https://github.com/Darkshadee/pbis-open/releases/download/9.1.0/pbis-open-9.1.0.551.linux.x86_64.deb.sh >/dev/null 2>&1
+        wget https://github.com/Darkshadee/pbis-open/releases/download/9.1.0/pbis-open-9.1.0.551.linux.x86_64.deb.sh 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Domain Joining"
         echo "15" ; sleep 3
         echo "# Running Script ..."
         sh pbis-open-9.1.0.551.linux.x86_64.deb.sh >/dev/null 2>&1
@@ -145,6 +145,84 @@ domain(){
 
 }
 
+compo(){
+
+       (
+           url=$(zenity --entry --width=500  --title "Composer" --text "Lando" --text="Paste Composer URL here : ")
+           if curl --output /dev/null --silent --head --fail "$url"; then
+                echo "25";
+                echo "# Checking Package is installed ..." ; sleep 3
+                i=`echo $url | sed 's|.*/||'`
+                echo "50";
+                echo "# Downloading Composer ..." ;
+                wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Composer..."
+                #curl -LJO $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --title "Downloading Lando"
+                echo "# Installing Composer ..." ;
+                mkdir /usr/local/bin/composer
+                echo "60";
+                mv $i /usr/local/bin/composer/
+                echo "70":
+                fusn=$(ls -t /home | awk 'NR==1 {print $1}')
+                printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /home/$fusn/.bashrc
+                echo "80";
+                source /home/$fusn/.bashrc
+                echo "95";
+                echo "# Installation Done ..." ;
+                COM_VER=$(php /usr/local/bin/composer/composer.phar --version | awk 'NR==1 {print $3}')
+                zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Composer Ver : </b> $COM_VER"
+            else
+                zenity --error --width=100  --title="Error" --text "<b>Invalid URL</b>"
+                exit 3;
+            fi
+        ) |
+            zenity --width=500 --progress \
+            --title="Installing Composer" \
+            --text="Composer..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+}
+
+lndo(){
+
+       (
+           url=$(zenity --entry --width=500  --title "Lando" --text "Lando" --text="Paste Lando URL here : ")
+           if curl --output /dev/null --silent --head --fail "$url"; then
+                echo "25";
+                echo "# Checking Package is installed ..." ;
+                i=`echo $url | sed 's|.*/||'`
+                echo "50";
+                echo "# Downloading Lando ..." ;
+                wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+                echo "# Installing Lando ..." ;
+                dpkg -i $i > /dev/null 2>&1
+                echo "95";
+                echo "# Installation Done ..." ;
+                LAN_VER=$(lando version)
+                zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+            else
+                zenity --error --width=100  --title="Error" --text "<b>Invalid URL</b>"
+                exit 3;
+            fi
+        ) |
+            zenity --width=500 --progress \
+            --title="Installing Lando" \
+            --text="Lando..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+}
+
 nj(){
         cl
         url=$(zenity --entry --width=500  --title "NodeJS" --text "NodeJS" --text="Paste NodeJS URL here : ")
@@ -168,15 +246,13 @@ nj(){
 
                         echo "55";
                         echo "# Downloading ...";
-
-                            curl -s -o $i $url > /dev/null
+                        curl -o $i $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading NodeJS..."
                         echo "65";
                         echo "# Unziping ...";
-
-                            tar -C /usr/local --strip-components 1 -xf $i >/dev/null
+                        tar -C /usr/local --strip-components 1 -xf $i >/dev/null
                         echo "80";
                         echo "# Installing NodeJS...";
-                            npm install -g npm@latest &>/dev/null
+                        npm install -g npm@latest &>/dev/null
                         echo "90";
                         echo "# Installing Npm"; sleep 3
                         rm -rf $i > /dev/null
@@ -192,15 +268,13 @@ nj(){
 
                         echo "55";
                         echo "# Downloading ...";
-
-                            curl -s -o $i $url > /dev/null
+                        curl -o $i $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading NodeJS..."
                         echo "65";
                         echo "# Unziping ...";
-
-                            tar -C /usr/local --strip-components 1 -xzf $i >/dev/null
+                        tar -C /usr/local --strip-components 1 -xzf $i >/dev/null
                         echo "80";
                         echo "# Installing NodeJS...";
-                            npm install -g npm@latest &>/dev/null
+                        npm install -g npm@latest &>/dev/null
                         echo "90";
                         echo "# Installing Npm"; sleep 3
                         rm -rf $i  > /dev/null
@@ -897,15 +971,17 @@ ins(){
 
             # apt-get install -y zenity >/dev/null
 
-            ListType=$(zenity --width=400 --height=300 --checklist --list \
+            ListType=$(zenity --width=400 --height=350 --checklist --list \
                 --title='Installaion'\
                 --text="<b>Select Software to install :</b>\n <span color=\"red\" font='10'> ⚠️ NOTE : Don't select Domain-join in multi selection. ⚠️ </span>"\                --column="Select" --column="Software List" \
                 " " "Domain-Join" \
                 " " "NodeJs" \
                 " " "MariaDB" \
                 " " "PHP" \
+                " " "Composer (php)" \
                 " " "Nginx" \
-                " " "Docker"
+                " " "Docker" \
+                " " "Lando"
                 )
 
             if [[ $? -eq 1 ]]; then
@@ -944,6 +1020,13 @@ ins(){
                 php_install
             fi
 
+            if [[ $ListType == *"Composer"* ]]; then
+
+                # they selected the short radio button
+                Flag="--Composer"
+                compo
+            fi
+
             if [[ $ListType == *"Nginx"* ]]; then
 
                 # they selected the short radio button
@@ -958,6 +1041,12 @@ ins(){
                 DOCK_CHK
             fi
 
+            if [[ $ListType == *"Lando"* ]]; then
+
+                # they selected the short radio button
+                Flag="--Lando"
+                lndo
+            fi
 
             # exit 0
     fi
