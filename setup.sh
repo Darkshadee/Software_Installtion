@@ -1,10 +1,6 @@
 #!/bin/bash
 #!/bin/sh
 
-# Display hardware listing for this computer
-
-TempFile=$(mktemp)
-
 cra(){
 
     IFS='|' read user pw domi  < <( zenity --width=300  --height=190 --forms --title="Credentials" --text="Login Details"    --add-entry="Username"    --add-password="Password"    --add-entry="Domain" )
