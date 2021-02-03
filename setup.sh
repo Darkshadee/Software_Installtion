@@ -136,7 +136,7 @@ domain(){
 
                 # they selected the short radio button
                     Flag="--Domain-Remove"
-                    mar
+
 
             else
 
@@ -285,8 +285,8 @@ nj(){
                         NODE_VER=$(node -v)
                         NPM_VER=$(npm -v)
 
-                        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
-                        exit 3;
+                        zenity --info --timeout 15 --width=150 --height=100 --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
+
                     else
                         zenity --error --width=150  --title="Error" --text "<b>Invalid Extantion</b>"
                         exit 1;
