@@ -34,6 +34,11 @@ cl(){
     fi
 }
 
+mld(){
+
+    apt-get install meld -y >/dev/null 2>&1
+}
+
 domainjoin(){
 
         cra
@@ -258,7 +263,7 @@ nj(){
                         NODE_VER=$(node -v)
                         NPM_VER=$(npm -v)
 
-                        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
+                        zenity --info --width=150 --height=100 --timeout 60  --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
 
                     elif [ "$z" = gz ]; then
 
@@ -895,38 +900,12 @@ DOCK_IN(){
             apt-get install docker-ce docker-ce-cli containerd.io -y  >/dev/null
             systemctl start docker
             systemctl enable docker
-            echo "65";
-            echo "# Installing PHP ..."; sleep 5
-            #Php is installing
-            php_install
-            echo "73";
-            echo "# Installing Mariadb ..."; sleep 5
-            #Mariadb is installing
-            MYS
-            echo "79";
-            echo "# Installing Nginx ..."; sleep 5
-            NG
-            echo "89";
-            echo "# Stoping and disabling Mariadb Services .."; sleep 5
-            #Mariadb stopping and Disabling
-            systemctl stop mysql --quiet
-            systemctl disable mysql --quiet
-            echo "95";
-            echo "# Stoping and disabling Nginx Services .."; sleep 5
-            #Nginx stopping and Disabling
-            systemctl stop nginx --quiet
-            systemctl disable nginx --quiet
-            echo "97";
-            echo "# Stoping and disabling PHP Services .."; sleep 5
-            #PHP stopping and Disabling
-            systemctl stop php5.6-fpm --quiet
-            systemctl disable php5.6-fpm --quiet
-            systemctl stop php7.0-fpm --quiet
-            systemctl disable php7.0-fpm --quiet
-            systemctl stop php7.1-fpm  --quiet
-            systemctl disable php7.1-fpm --quiet
-            systemctl stop php7.2-fpm --quiet
-            systemctl disable php7.2-fpm --quiet
+            echo "80";
+            echo "# Configuring Docker Setup ...";
+            sudo sed -i -e 's/SocketMode=.*/SocketMode=0666/g' /lib/systemd/system/docker.socket
+            systemctl daemon-reload
+            systemctl stop docker.socket
+            systemctl start docker.socket
             echo "100"; sleep 5
             echo "# Docker Installed ...";
 
