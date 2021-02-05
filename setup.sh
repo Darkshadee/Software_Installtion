@@ -468,7 +468,7 @@ nj(){
     ) |
             zenity --width=500 --progress \
             --title="Installing NodeJs" \
-            --text="NodeJs..." \
+            --text="Collecting a Data, Please Wait ..." \
             --percentage=0 --auto-close
 
             if [[ $? -eq 1 ]]; then
