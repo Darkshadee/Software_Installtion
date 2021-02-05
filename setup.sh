@@ -20,7 +20,7 @@ cra(){
 rsrt(){
     timeout=30
     for (( i=0 ; i <= $timeout ; i++ )) do
-        echo "# System will restart in $[ $timeout - $i ]..."
+        echo "# System will restart in $[ $timeout - $i ] ..."
         echo $[ 100 * $i / $timeout ]
         sleep 1
     done | zenity  --progress --title="Restarting ..."  \
