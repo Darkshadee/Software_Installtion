@@ -246,6 +246,7 @@ lan_spc(){
             --column "Versions" \
             "${choices[@]}"`
         IFS="$OLDIFS"
+
         selver=`echo "lando-$choice.deb"`
         url="https://github.com/lando/lando/releases/download/$choice/$selver"
         echo "50";
