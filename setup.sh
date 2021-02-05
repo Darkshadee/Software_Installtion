@@ -450,16 +450,16 @@ nj(){
         selver=`echo "node-$ver-linux-x64.tar.gz"`
 
         url="https://nodejs.org/dist/latest-$choice/$selver"
-        curl -o $selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
+        curl -o /tmp/$selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
         echo "70";
         echo "# Installing NodeJs ..." ; sleep 3
-        tar -C /usr/local --strip-components 1 -xzf $selver >/dev/null
+        tar -C /usr/local --strip-components 1 -xzf /tmp/$selver >/dev/null
         echo "80";
         echo "# Installing NPM ..." ; sleep 3
         npm_in
         echo "95"
         echo "# Installation Done ..." ; sleep 3
-        rm -rvf $selver
+        rm -rvf /tmp/$selver
         NODE_VER=$(node -v)
         NPM_VER=$(npm -v)
 
