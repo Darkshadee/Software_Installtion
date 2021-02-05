@@ -78,7 +78,7 @@ domainjoin(){
         echo "# Domain Joined Sucessfully ..."
         echo "95" ; sleep 3
         echo "# Rebooting system ..."
-        echo "100" ;
+        echo "100" ; sleep 10
         /sbin/reboot
         ) |
         zenity --width=500 --progress \
@@ -147,6 +147,7 @@ domain(){
 }
 
 compo(){
+            cl
 
        (
            url=$(zenity --entry --width=500  --title "Composer" --text "Lando" --text="Paste Composer URL here : ")
@@ -189,28 +190,27 @@ compo(){
             fi
 }
 
-lndo(){
+#!/bin/bash
 
-       (
-           url=$(zenity --entry --width=500  --title "Lando" --text "Lando" --text="Paste Lando URL here : ")
-           if curl --output /dev/null --silent --head --fail "$url"; then
-                echo "25";
-                echo "# Checking Package is installed ..." ;
-                i=`echo $url | sed 's|.*/||'`
-                echo "50";
-                echo "# Downloading Lando ..." ;
-                wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
-                echo "# Installing Lando ..." ;
-                dpkg -i $i > /dev/null 2>&1
-                echo "95";
-                echo "# Installation Done ..." ;
-                LAN_VER=$(lando version)
-                zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
-            else
-                zenity --error --width=100  --title="Error" --text "<b>Invalid URL</b>"
-                exit 3;
-            fi
-        ) |
+lan_las(){
+    (
+        echo "25";
+        echo "# Getting Data from lando ..." ; sleep 3
+        curl https://github.com/lando/lando/tags > /tmp/ver.txt >/dev/null 2>&1
+        choice=`cat ver.txt | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' | awk 'NR==1 {print $1}'`
+        selver=`echo "lando-$choice.deb"`
+        url="https://github.com/lando/lando/releases/download/$choice/$selver"
+        echo "50";
+        echo "# Downloading Lando ..." ; sleep 3
+        wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+        echo "70";
+        echo "# Installing Lando ..." ; sleep 3
+        dpkg -i --ignore-depends=docker-ce $selver > /dev/null 2>&1
+        echo "95";
+        echo "# Installation Done ..." ; sleep 3
+        LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
+        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+    ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
             --text="Lando..." \
@@ -222,89 +222,255 @@ lndo(){
                 --text="Installtion canceled."
 
             fi
+
+}
+
+lan_spc(){
+    (
+        curl https://github.com/lando/lando/tags > /tmp/ver.txt >/dev/null 2>&1
+        cat ver.txt | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' > /tmp/file.txt
+        sfile="/tmp/file.txt"
+        OLDIFS="$IFS"
+        IFS="
+        "
+        choices=()
+        mode="true"
+        for name in `cat "file.txt"` ; do
+            choices=("${choices[@]}" "$mode" "$name")
+            mode="false"
+        done
+
+        choice=`zenity --width=300 --height=380 \
+            --list \
+            --separator="$IFS" \
+            --radiolist \
+            --text="Select Versions:" \
+            --column "Select" \
+            --column "Versions" \
+            "${choices[@]}"`
+        IFS="$OLDIFS"
+
+        selver=`echo "lando-$choice.deb"`
+        url="https://github.com/lando/lando/releases/download/$choice/$selver"
+        echo "50";
+        echo "# Downloading Lando ..." ; sleep 3
+        wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+        echo "70";
+        echo "# Installing Lando ..." ; sleep 3
+        dpkg -i --ignore-depends=docker-ce $selver > /dev/null 2>&1
+        echo "95";
+        echo "# Installation Done ..." ; sleep 3
+        rm -rf /tmp/ver.txt
+        rm -rf /tmp/file.txt
+        LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
+        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+    ) |
+            zenity --width=500 --progress \
+            --title="Installing Lando" \
+            --text="Lando..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+
+}
+
+lan_rm(){
+    (
+    echo "30";
+    echo "# Removing Lando ..." ; sleep 3
+    dpkg -P lando  >/dev/null 2>&1
+    echo "95";
+    echo "# Removed Lando ..." ; sleep 3
+    ) |
+            zenity --width=500 --progress \
+            --title="Removing Lando" \
+            --text="Lando..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+
+}
+
+
+lan_chk(){
+    pkgs='lando'
+	if  dpkg -s $pkgs >/dev/null 2>&1; then
+		lan_rm
+    fi
+}
+
+
+lan(){
+     ListType=`zenity --width=170 --height=170 --list --radiolist \
+                --title 'Lando Installaion'\
+                --text 'Select Version to install:' \
+                --column 'Select' \
+                --column 'Actions' TRUE "Latest" FALSE "Specific"`
+
+            if [[ $? -eq 1 ]]; then
+
+                # they pressed Cancel or closed the dialog window
+                zenity --error --title="Declined" --width=200 \
+                    --text="Installtion Canceled "
+                exit 1
+
+            elif [ $ListType == "Latest" ]; then
+
+                # they selected the short radio button
+                    Flag="--Lando-Latest"
+                    lan_chk
+                    lan_las
+
+            elif [ $ListType == "Specific" ]; then
+
+                # they selected the short radio button
+                    Flag="--Lando-Specific"
+                    lan_chk
+                    lan_spc
+
+            else
+
+                # they selected the long radio button
+                Flag=""
+            fi
+}
+
+
+nj_rm(){
+    (
+    echo "30";
+    echo "# Removing NodeJs ..." ; sleep 3
+    apt-get purge --auto-remove nodejs -y  >/dev/null 2>&1
+    echo "50";
+    echo "# Removing Related File ..." ; sleep 3
+    rm -rf /etc/apt/sources.list.d/nodesource.list
+    echo "95";
+    echo "# Removed NodeJs ..." ; sleep 3
+    ) |
+            zenity --width=500 --progress \
+            --title="Removing NodeJs" \
+            --text="NodeJs..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+
+}
+
+npm_bichk(){
+    (
+        file="/usr/local/bin/npm"
+        file1="/usr/local/bin/node"
+
+        if [[ -e "$file" || -e $file1 ]]; then
+            echo "30";
+            echo "# Removing NodeJs ..." ; sleep 3
+            rm -rf /usr/local/lib/node_modules &>/dev/null
+            rm -rf /usr/local/share/man/man1/node* &>/dev/null
+            rm -rf /usr/local/lib/dtrace/node.d &>/dev/null
+            rm -rf ~/.npm &>/dev/null
+            echo "50";
+            echo "# Removing Related File ..." ; sleep 3
+            rm -rf ~/.node-gyp &>/dev/null
+            rm -rf /opt/local/bin/node &>/dev/null
+            rm -rf opt/local/include/node &>/dev/null
+            rm -rf /opt/local/lib/node_modules &>/dev/null
+            echo "70";
+            echo "# Removing Related File ..." ; sleep 3
+            rm -rf /usr/local/lib/node* &>/dev/null
+            rm -rf /usr/local/include/node* &>/dev/null
+            rm -rf /usr/local/bin/node* &>/dev/null
+            echo "95";
+            echo "# Removed NodeJs ..." ; sleep 3
+        fi
+    ) |
+            zenity --width=500 --progress \
+            --title="Removing NodeJs" \
+            --text="NodeJs..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+
+            fi
+
+}
+
+npm_in(){
+    zenity --question --width=350  --text="Did you want to install  <b>NPM Latest Version</b> ?" --ok-label="Yes" --cancel-label="No"
+    if [ $? = 0 ] ; then
+    echo "yes"
+    npm install -g npm@latest &>/dev/null
+    fi
+}
+
+nj_chk(){
+    pkgs='nodejs'
+	if  dpkg -s $pkgs >/dev/null 2>&1; then
+		nj_rm
+    fi
 }
 
 nj(){
-        cl
-        url=$(zenity --entry --width=500  --title "NodeJS" --text "NodeJS" --text="Paste NodeJS URL here : ")
-       (
-                echo "10";
-                echo "# Started ..." ;
-                u=`echo $url | grep -o '\b\w*linux-x64\w*\b'`
-                echo "30";
-                echo "# Checking Data ..." ;
+    (
+        nj_chk
+        npm_bichk
+        lst=$(curl -s "https://nodejs.org/dist/" | grep "latest" | awk -F 'latest-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}'  | sort -Vr )
+        choices=()
+        mode="true"
+        for name in $lst ; do
+            choices=("${choices[@]}" "$mode" "$name")
+            mode="false"
+        done
 
-            if curl --output /dev/null --silent --head --fail "$url"; then
-                echo "40";
-                echo "# Checking Url ..." ;
-                if [ "$u" = linux-x64 ] ; then
-                    echo "50";
-                    echo "# Checking Package ...";
-                    i=`echo $url | sed 's|.*/||'`
-                    z=`echo $url | sed 's|.*tar.||'`
+        choice=`zenity --width=300 --height=380 \
+            --list \
+            --separator="$IFS" \
+            --radiolist \
+            --text="Select Versions:" \
+            --column "Select" \
+            --column "Versions" \
+            "${choices[@]}"`
+        IFS="$OLDIFS"
 
-                    if [ "$z" = xz ]; then
+        echo "25";
+        echo "# Getting Data from NodeJs ..." ; sleep 3
+        ver=$(curl -s "https://nodejs.org/dist/latest-$choice/" | grep "node" | awk -F 'node-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}' | grep "linux-x64.tar.gz" | awk -F "-" '{print $1}')
+        selver=`echo "node-$ver-linux-x64.tar.gz"`
 
-                        echo "55";
-                        echo "# Downloading ...";
-                        curl -o $i $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading NodeJS..."
-                        echo "65";
-                        echo "# Unziping ...";
-                        tar -C /usr/local --strip-components 1 -xf $i >/dev/null
-                        echo "80";
-                        echo "# Installing NodeJS...";
-                        npm install -g npm@latest &>/dev/null
-                        echo "90";
-                        echo "# Installing Npm"; sleep 3
-                        rm -rf $i > /dev/null
-                        echo "100";
-                        echo "# Nodejs Installed"
+        url="https://nodejs.org/dist/latest-$choice/$selver"
+        curl -o $selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
+        echo "70";
+        echo "# Installing NodeJs ..." ; sleep 3
+        tar -C /usr/local --strip-components 1 -xzf $selver >/dev/null
+        echo "80";
+        echo "# Installing NPM ..." ; sleep 3
+        npm_in
+        echo "95"
+        echo "# Installation Done ..." ; sleep 3
+        rm -rvf $selver
+        NODE_VER=$(node -v)
+        NPM_VER=$(npm -v)
 
-                        NODE_VER=$(node -v)
-                        NPM_VER=$(npm -v)
+        zenity --info --width=150 --height=100 --timeout 60  --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
 
-                        zenity --info --width=150 --height=100 --timeout 60  --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
-
-                    elif [ "$z" = gz ]; then
-
-                        echo "55";
-                        echo "# Downloading ...";
-                        curl -o $i $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading NodeJS..."
-                        echo "65";
-                        echo "# Unziping ...";
-                        tar -C /usr/local --strip-components 1 -xzf $i >/dev/null
-                        echo "80";
-                        echo "# Installing NodeJS...";
-                        npm install -g npm@latest &>/dev/null
-                        echo "90";
-                        echo "# Installing Npm"; sleep 3
-                        rm -rf $i  > /dev/null
-                        echo "100";
-                        echo "# Nodejs Installed"
-
-                        NODE_VER=$(node -v)
-                        NPM_VER=$(npm -v)
-
-                        zenity --info --timeout 15 --width=150 --height=100 --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
-
-                    else
-                        zenity --error --width=150  --title="Error" --text "<b>Invalid Extantion</b>"
-                        exit 1;
-                    fi
-
-                else
-                    zenity --error --width=300  --title="Error" --text "<b>Please Select Linux-x64 Package URL</b>"
-                    exit 1;
-
-                fi
-
-            else
-                zenity --error --width=100  --title="Error" --text "<b>Invalid URL</b>"
-                exit 3;
-            fi
-
-
-        ) |
+    ) |
             zenity --width=500 --progress \
             --title="Installing NodeJs" \
             --text="NodeJs..." \
@@ -316,6 +482,7 @@ nj(){
                 --text="Installtion canceled."
 
             fi
+
 }
 
 MY_INS(){
@@ -1020,7 +1187,7 @@ ins(){
 
                 # they selected the short radio button
                 Flag="--Lando"
-                lndo
+                lan
             fi
 
             # exit 0
