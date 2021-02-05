@@ -202,12 +202,13 @@ lan_las(){
         url="https://github.com/lando/lando/releases/download/$choice/$selver"
         echo "50";
         echo "# Downloading Lando ..." ; sleep 3
-        wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+        wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
         echo "70";
         echo "# Installing Lando ..." ; sleep 3
-        dpkg -i --ignore-depends=docker-ce $selver > /dev/null 2>&1
+        dpkg -i --ignore-depends=docker-ce /tmp/$selver > /dev/null 2>&1
         echo "95";
         echo "# Installation Done ..." ; sleep 3
+        rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
         zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
@@ -250,13 +251,13 @@ lan_spc(){
         url="https://github.com/lando/lando/releases/download/$choice/$selver"
         echo "50";
         echo "# Downloading Lando ..." ; sleep 3
-        wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+        wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
         echo "70";
         echo "# Installing Lando ..." ; sleep 3
-        dpkg -i --ignore-depends=docker-ce $selver > /dev/null 2>&1
+        dpkg -i --ignore-depends=docker-ce /tmp/$selver > /dev/null 2>&1
         echo "95";
         echo "# Installation Done ..." ; sleep 3
-        rm -rf $selver
+        rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
         zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
