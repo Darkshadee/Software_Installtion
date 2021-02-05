@@ -256,8 +256,7 @@ lan_spc(){
         dpkg -i --ignore-depends=docker-ce $selver > /dev/null 2>&1
         echo "95";
         echo "# Installation Done ..." ; sleep 3
-        rm -rf /tmp/ver.txt
-        rm -rf /tmp/file.txt
+        rm -rf $selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
         zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
@@ -307,6 +306,7 @@ lan_chk(){
 
 
 lan(){
+        lan_chk
      ListType=`zenity --width=170 --height=170 --list --radiolist \
                 --title 'Lando Installaion'\
                 --text 'Select Version to install:' \
@@ -324,14 +324,12 @@ lan(){
 
                 # they selected the short radio button
                     Flag="--Lando-Latest"
-                    lan_chk
                     lan_las
 
             elif [ $ListType == "Specific" ]; then
 
                 # they selected the short radio button
                     Flag="--Lando-Specific"
-                    lan_chk
                     lan_spc
 
             else
