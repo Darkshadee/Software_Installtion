@@ -150,7 +150,7 @@ compo(){
             cl
 
        (
-           url=$(zenity --entry --width=500  --title "Composer" --text "Lando" --text="Paste Composer URL here : ")
+           url=$(zenity --entry --width=500  --title "Composer"  --text="Paste Composer URL here : ")
            if curl --output /dev/null --silent --head --fail "$url"; then
                 echo "25";
                 echo "# Checking Package is installed ..." ; sleep 3
@@ -227,15 +227,11 @@ lan_las(){
 
 lan_spc(){
     (
-        curl https://github.com/lando/lando/tags > /tmp/ver.txt >/dev/null 2>&1
-        cat ver.txt | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' > /tmp/file.txt
-        sfile="/tmp/file.txt"
-        OLDIFS="$IFS"
-        IFS="
-        "
+        lst_l=$(curl -s https://github.com/lando/lando/tags | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' )
+
         choices=()
         mode="true"
-        for name in `cat "file.txt"` ; do
+        for name in $lst_l ; do
             choices=("${choices[@]}" "$mode" "$name")
             mode="false"
         done
