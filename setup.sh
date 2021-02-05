@@ -499,23 +499,28 @@ nj(){
 
 }
 
+MYS_CHK(){
+    pkgs='mariadb-server'
+    if ! dpkg -s $pkgs >/dev/null 2>&1; then
+        MY_INS
+    else
+        MYSQL_VER=$(mysql --version | awk '{print $5}')
+        zenity --info --timeout 10 --width=250 --height=100 --title="MariaDB" --text "<b>MariaDB is already installed ! 😊 \n\n Version is :</b> $MYSQL_VER"
+    fi
+}
+
 MY_INS(){
     (
-       echo "5";
-       echo "# Checking Package is installed ..." ;
-pkgs='mariadb-server'
-if ! dpkg -s $pkgs >/dev/null 2>&1; then
-
-    echo "25" ;
-	echo "# Updating Packages ..." ;
+        echo "25" ;
+        echo "# Updating Packages ..." ;
         apt-get autoremove -y >/dev/null
         dpkg --configure -a
         apt-get update -y >/dev/null
-    echo "35"
-    echo "# Installing MariaDB ..." ;
+        echo "35"
+        echo "# Installing MariaDB ..." ;
         apt-get install -y $pkgs >/dev/null
-    echo "50" ;
-    echo "# Configuring MariaDB ..." ; sleep 3
+        echo "50" ;
+        echo "# Configuring MariaDB ..." ; sleep 3
 
         db_root_password=root
 cat <<EOF | mysql_secure_installation
@@ -530,24 +535,19 @@ y
 y
 EOF
 
-    echo "75" ;
-    echo "# Changing Permission ...";
+        echo "75" ;
+        echo "# Changing Permission ...";
         MYSQL=`which mysql`
         Q1="grant all privileges on *.* to 'root'@'%' identified by 'root';"
         Q2="FLUSH PRIVILEGES;"
         SQL="${Q1}${Q2}"
         MYSQL_VER=$(mysql --version | awk '{print $5}')
-    echo "85";
-    echo "# Almost Done ..."
+        echo "85";
+        echo "# Almost Done ..."
         $MYSQL -uroot -p$db_root_password -e "$SQL"
-    echo "100"
-	echo  "# MariaDb has been Installed ..."
-    zenity --info --timeout 10 --width=250 --height=100 --title="MariaDB" --text "<b>MariaDB Installed ! 😊 \n\n Version is :</b> $MYSQL_VER"
-
-    else
-    MYSQL_VER=$(mysql --version | awk '{print $5}')
-    zenity --info --timeout 10 --width=250 --height=100 --title="MariaDB" --text "<b>MariaDB is already installed ! 😊 \n\n Version is :</b> $MYSQL_VER"
-    fi
+        echo "100"
+        echo  "# MariaDb has been Installed ..."
+        zenity --info --timeout 10 --width=250 --height=100 --title="MariaDB" --text "<b>MariaDB Installed ! 😊 \n\n Version is :</b> $MYSQL_VER"
 
     ) |
          zenity --width=500 --progress \
@@ -633,7 +633,7 @@ MYS(){
             elif [ $ListType == "Install" ]; then
 
                 # they selected the short radio button
-                    MY_INS
+                    MYS_CHK
 
             elif [ $ListType == "Remove" ]; then
 
