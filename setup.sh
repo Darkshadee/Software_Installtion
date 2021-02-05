@@ -146,40 +146,48 @@ domain(){
 
 }
 
-compo(){
-            cl
+php-comp(){
+    (
+        lst_ph=$(curl -s https://github.com/composer/composer/tags | grep "/composer/composer/releases/tag/" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' | sort -Vr)
+        choices=()
+        mode="true"
+        for name in $lst_ph ; do
+            choices=("${choices[@]}" "$mode" "$name")
+            mode="false"
+        done
 
-       (
-           url=$(zenity --entry --width=500  --title "Composer"  --text="Paste Composer URL here : ")
-           if curl --output /dev/null --silent --head --fail "$url"; then
-                echo "25";
-                echo "# Checking Package is installed ..." ; sleep 3
-                i=`echo $url | sed 's|.*/||'`
-                echo "50";
-                echo "# Downloading Composer ..." ;
-                wget $url 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Composer..."
-                #curl -LJO $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --title "Downloading Lando"
-                echo "# Installing Composer ..." ;
-                mkdir /usr/local/bin/composer
-                echo "60";
-                mv $i /usr/local/bin/composer/
-                echo "70":
-                fusn=$(ls -t /home | awk 'NR==1 {print $1}')
-                printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /home/$fusn/.bashrc
-                echo "80";
-                source /home/$fusn/.bashrc
-                echo "95";
-                echo "# Installation Done ..." ;
-                COM_VER=$(php /usr/local/bin/composer/composer.phar --version | awk 'NR==1 {print $3}')
-                zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Composer Ver : </b> $COM_VER"
-            else
-                zenity --error --width=100  --title="Error" --text "<b>Invalid URL</b>"
-                exit 3;
-            fi
-        ) |
+        choice=`zenity --width=300 --height=380 \
+            --list \
+            --separator="$IFS" \
+            --radiolist \
+            --text="Select Versions:" \
+            --column "Select" \
+            --column "Versions" \
+            "${choices[@]}"`
+        IFS="$OLDIFS"
+        #echo $choice
+        url="https://github.com/composer/composer/releases/download/$choice/composer.phar"
+        echo "25";
+        echo "# Downloading php-composer ..." ; sleep 3
+        wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Php-composer..."
+        echo "70";
+        echo "# Installing Php-composer ..." ; sleep 3
+        mkdir /usr/local/bin/composer >/dev/null 2>&1
+        echo "60";
+        mv /tmp/composer.phar /usr/local/bin/composer/ >/dev/null 2>&1
+        echo "70":
+        #fusn=$(ls -t /home | awk 'NR==1 {print $1}')
+        printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /etc/bash.bashrc
+        echo "80";
+        source /etc/bash.bashrc >/dev/null 2>&1
+        echo "95";
+        echo "# Installation Done ..." ;
+        rm -rf /tmp/composer.phar >/dev/null 2>&1
+        zenity --info --width=280 --height=100 --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
+    ) |
             zenity --width=500 --progress \
-            --title="Installing Composer" \
-            --text="Composer..." \
+            --title="Installing PHP-Composer" \
+            --text="Please wait ..." \
             --percentage=0 --auto-close
 
             if [[ $? -eq 1 ]]; then
@@ -190,16 +198,27 @@ compo(){
             fi
 }
 
-#!/bin/bash
+php_comp_chk(){
+	    file="/usr/bin/php"
+       # file1="/usr/local/bin/node"
+
+        if [[ ! -e "$file" ]]; then
+        	zenity --width=200 --error \
+                --text="<b>PHP is not installed!</b>"
+        else
+      		php-comp
+      	fi
+}
+
 
 lan_las(){
     (
         echo "25";
         echo "# Getting Data from lando ..." ; sleep 3
-        curl https://github.com/lando/lando/tags > /tmp/ver.txt >/dev/null 2>&1
-        choice=`cat ver.txt | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' | awk 'NR==1 {print $1}'`
-        selver=`echo "lando-$choice.deb"`
-        url="https://github.com/lando/lando/releases/download/$choice/$selver"
+        lan_lat=$(curl -s https://github.com/lando/lando/tags | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' | awk 'NR==1 {print $1}')
+
+        selver=`echo "lando-$lan_lat.deb"`
+        url="https://github.com/lando/lando/releases/download/$lan_lat/$selver"
         echo "50";
         echo "# Downloading Lando ..." ; sleep 3
         wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
@@ -214,7 +233,7 @@ lan_las(){
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
-            --text="Lando..." \
+            --text="Please Wait ..." \
             --percentage=0 --auto-close
 
             if [[ $? -eq 1 ]]; then
@@ -263,7 +282,7 @@ lan_spc(){
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
-            --text="Lando..." \
+            --text="Please Wait ..." \
             --percentage=0 --auto-close
 
             if [[ $? -eq 1 ]]; then
@@ -468,7 +487,7 @@ nj(){
     ) |
             zenity --width=500 --progress \
             --title="Installing NodeJs" \
-            --text="Collecting a Data, Please Wait ..." \
+            --text="Please Wait ..." \
             --percentage=0 --auto-close
 
             if [[ $? -eq 1 ]]; then
@@ -1161,7 +1180,7 @@ ins(){
 
                 # they selected the short radio button
                 Flag="--Composer"
-                compo
+                php_comp_chk
             fi
 
             if [[ $ListType == *"Nginx"* ]]; then
