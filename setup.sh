@@ -17,6 +17,22 @@ cra(){
 
 }
 
+rsrt(){
+    timeout=30
+    for (( i=0 ; i <= $timeout ; i++ )) do
+        echo "# Restart in $[ $timeout - $i ]..."
+        echo $[ 100 * $i / $timeout ]
+        sleep 1
+    done | zenity  --progress --title="Restart automatically..."  \
+        --window-icon=warning --width=500 --auto-close
+
+    if [ $? = 0 ] ; then
+        /sbin/reboot
+    else
+        zenity --info --width=280 --height=100 --timeout 60  --title="Restart" --text "<b>Restart manually ...</b>"
+    fi
+}
+
 ti(){
 
         timeout=10
@@ -79,7 +95,7 @@ domainjoin(){
         echo "95" ; sleep 3
         echo "# Rebooting system ..."
         echo "100" ; sleep 10
-        /sbin/reboot
+        rsrt
         ) |
         zenity --width=500 --progress \
         --title="Domain Joining" \
@@ -183,7 +199,7 @@ php-comp(){
         echo "95";
         echo "# Installation Done ..." ;
         rm -rf /tmp/composer.phar >/dev/null 2>&1
-        zenity --info --width=280 --height=100 --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
+        zenity --info --width=280 --height=100 --timeout 60  --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
     ) |
             zenity --width=500 --progress \
             --title="Installing PHP-Composer" \
@@ -229,7 +245,7 @@ lan_las(){
         echo "# Installation Done ..." ; sleep 3
         rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
-        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
@@ -278,7 +294,7 @@ lan_spc(){
         echo "# Installation Done ..." ; sleep 3
         rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
-        zenity --info --width=150 --height=100 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
@@ -545,8 +561,8 @@ EOF
         echo "85";
         echo "# Almost Done ..."
         $MYSQL -uroot -p$db_root_password -e "$SQL"
-        echo "100"
-        echo  "# MariaDb has been Installed ..."
+        echo "100";
+        echo  "# MariaDb has been Installed ...";
         zenity --info --timeout 10 --width=250 --height=100 --title="MariaDB" --text "<b>MariaDB Installed ! 😊 \n\n Version is :</b> $MYSQL_VER"
 
     ) |
@@ -623,27 +639,20 @@ MYS(){
                 --column 'Select' \
                 --column 'Actions' TRUE "Install" FALSE "Remove"`
 
-            if [[ $? -eq 1 ]]; then
-
-                # they pressed Cancel or closed the dialog window
-                zenity --error --title="Declined" --width=200 \
-                    --text="Installtion Canceled "
-                exit 1
-
-            elif [ $ListType == "Install" ]; then
+            if [[ $ListType == "Install" ]]; then
 
                 # they selected the short radio button
                     MYS_CHK
 
-            elif [ $ListType == "Remove" ]; then
+            elif [[ $ListType == "Remove" ]]; then
 
                 # they selected the short radio button
                     MY_RMV
 
             else
+                zenity --error --title="Declined" --width=200 \
+                    --text="Installtion Canceled "
 
-                # they selected the long radio button
-                Flag=""
             fi
 
 }
