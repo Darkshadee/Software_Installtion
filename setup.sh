@@ -20,10 +20,10 @@ cra(){
 rsrt(){
     timeout=30
     for (( i=0 ; i <= $timeout ; i++ )) do
-        echo "# Restart in $[ $timeout - $i ]..."
+        echo "# System will restart in $[ $timeout - $i ]..."
         echo $[ 100 * $i / $timeout ]
         sleep 1
-    done | zenity  --progress --title="Restart automatically..."  \
+    done | zenity  --progress --title="Restarting ..."  \
         --window-icon=warning --width=500 --auto-close
 
     if [ $? = 0 ] ; then
@@ -94,7 +94,6 @@ domainjoin(){
         echo "# Domain Joined Sucessfully ..."
         echo "95" ; sleep 3
         echo "# Rebooting system ..."
-        echo "100" ; sleep 10
         rsrt
         ) |
         zenity --width=500 --progress \
