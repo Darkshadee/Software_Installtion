@@ -33,16 +33,6 @@ rsrt(){
     fi
 }
 
-ti(){
-
-        timeout=10
-        for (( i=0 ; i <= $timeout ; i++ )) do
-        echo "# Restart in $[ $timeout - $i ] ..."
-        echo $[ 100 * $i / $timeout ]
-        sleep 1
-        done
-}
-
 cl(){
     pkgs='curl'
 	if ! dpkg -s $pkgs >/dev/null 2>&1; then
@@ -104,24 +94,6 @@ domainjoin(){
         if [[ $? == 1 ]]; then
             zenity --width=200 --error \
             --text="Installtion canceled."
-        else
-
-            (
-            ti
-            ) |
-            zenity  --progress --title="Restart automatically..."  \
-            --window-icon=warning --auto-close --width=400
-
-            if [[ $? -eq 0 ]]; then
-            # /sbin/reboot
-            echo "Test"
-
-            else
-            zenity --width=200 --error \
-            --text="Restart canceled."
-
-            fi
-
         fi
 
 }
