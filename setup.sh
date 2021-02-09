@@ -232,7 +232,7 @@ lan_las(){
 
 }
 
-llan_nl(){
+lan_nl(){
 
         ver_ned=$(zenity --entry --width=200  --title "Lando" --text "Lando" --text="Enter Correct Version : ")
         selver=`echo "lando-v$ver_ned.deb"`
