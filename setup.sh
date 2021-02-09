@@ -278,7 +278,6 @@ lan_spc_l(){
     (
         selver=`echo "lando-$choice.deb"`
         url="https://github.com/lando/lando/releases/download/$choice/$selver"
-        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Url : </b> $url"
         echo "50";
         echo "# Downloading Lando ..." ; sleep 3
         wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
@@ -1148,6 +1147,16 @@ DOCK_IN(){
     fi
 }
 
+ins_del(){
+    zenity --question --title="Exit" --width=350 --text="Are you sure, You want to delect this Script ?"
+    if [ $? = 0 ]; then
+        cd .. && rm -rf Software_Installtion-master*
+    else
+        exit;
+    fi
+
+}
+
 
 ins(){
 
@@ -1180,6 +1189,7 @@ ins(){
                 # they pressed Cancel or closed the dialog window
                 zenity --error --title="Declined" --width=200 \
                     --text="Canceled Installtion"
+                ins_del
                 exit 1
             fi
 
