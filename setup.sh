@@ -17,6 +17,17 @@ cra(){
 
 }
 
+
+ins_del(){
+    zenity --question --title="Exit" --width=350 --text="Are you sure, You want to delect this Script ?"
+    if [ $? = 0 ]; then
+        cd .. && rm -rf Software_Installtion-master*
+    else
+        exit;
+    fi
+
+}
+
 rsrt(){
     timeout=30
     for (( i=0 ; i <= $timeout ; i++ )) do
@@ -29,7 +40,7 @@ rsrt(){
     if [ $? = 0 ] ; then
         /sbin/reboot
     else
-        zenity --info --width=280 --height=100 --timeout 60  --title="Restart" --text "<b>Restart manually ...</b>"
+        zenity --info --width=280 --height=100 --timeout 15  --title="Restart" --text "<b>Restart manually ...</b>"
     fi
 }
 
@@ -94,6 +105,7 @@ domainjoin(){
         if [[ $? == 1 ]]; then
             zenity --width=200 --error \
             --text="Installtion canceled."
+            ins_del
         fi
 
 }
@@ -133,8 +145,92 @@ domain(){
 
 }
 
-php-comp(){
+php_nl_in(){
     (
+            echo "25";
+            echo "# Downloading php-composer ..." ; sleep 3
+            wget $php_comp_nl_url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Php-composer..."
+            echo "70";
+            echo "# Installing Php-composer ..." ; sleep 3
+            mkdir /usr/local/bin/composer >/dev/null 2>&1
+            echo "60";
+            mv /tmp/composer.phar /usr/local/bin/composer/ >/dev/null 2>&1
+            echo "70":
+            printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /etc/bash.bashrc
+            echo "80";
+            source /etc/bash.bashrc >/dev/null 2>&1
+            echo "95";
+            echo "# Installation Done ..." ;
+            rm -rf /tmp/composer.phar >/dev/null 2>&1
+            zenity --info --width=280 --height=100 --timeout 15  --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
+        ) |
+            zenity --width=500 --progress \
+            --title="Installing PHP-Composer" \
+            --text="Please wait ..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+                ins_del
+
+            fi
+}
+
+
+php_comp_lst(){
+        (
+            url="https://github.com/composer/composer/releases/download/$choice/composer.phar"
+            echo "25";
+            echo "# Downloading php-composer ..." ; sleep 3
+            wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Php-composer..."
+            echo "70";
+            echo "# Installing Php-composer ..." ; sleep 3
+            mkdir /usr/local/bin/composer >/dev/null 2>&1
+            echo "60";
+            mv /tmp/composer.phar /usr/local/bin/composer/ >/dev/null 2>&1
+            echo "70":
+            #fusn=$(ls -t /home | awk 'NR==1 {print $1}')
+            printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /etc/bash.bashrc
+            echo "80";
+            source /etc/bash.bashrc >/dev/null 2>&1
+            echo "95";
+            echo "# Installation Done ..." ;
+            rm -rf /tmp/composer.phar >/dev/null 2>&1
+            zenity --info --width=280 --height=100 --timeout 15  --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
+        ) |
+            zenity --width=500 --progress \
+            --title="Installing PHP-Composer" \
+            --text="Please wait ..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+                ins_del
+
+            fi
+
+}
+
+php_comp_nl(){
+
+        ver_ned=$(zenity --entry --width=200  --title "PHP-Composer" --text "PHP-Composer" --text="Enter Correct Version : ")
+        php_comp_nl_url="https://github.com/composer/composer/releases/download/$ver_ned/composer.phar"
+        # echo "$lan_nl_url"
+        if curl --output /dev/null --silent --head --fail "$php_comp_nl_url"; then
+            php_nl_in
+        else
+            zenity --error --width=150  --title="Error" --text "<b>Incorrect Version !</b>"
+
+        fi
+
+}
+
+
+php_comp(){
         lst_ph=$(curl -s https://github.com/composer/composer/tags | grep "/composer/composer/releases/tag/" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' | sort -Vr)
         choices=()
         mode="true"
@@ -150,39 +246,25 @@ php-comp(){
             --text="Select Versions:" \
             --column "Select" \
             --column "Versions" \
-            "${choices[@]}"`
-        IFS="$OLDIFS"
-        #echo $choice
-        url="https://github.com/composer/composer/releases/download/$choice/composer.phar"
-        echo "25";
-        echo "# Downloading php-composer ..." ; sleep 3
-        wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Php-composer..."
-        echo "70";
-        echo "# Installing Php-composer ..." ; sleep 3
-        mkdir /usr/local/bin/composer >/dev/null 2>&1
-        echo "60";
-        mv /tmp/composer.phar /usr/local/bin/composer/ >/dev/null 2>&1
-        echo "70":
-        #fusn=$(ls -t /home | awk 'NR==1 {print $1}')
-        printf "alias composer='php /usr/local/bin/composer/composer.phar'" >> /etc/bash.bashrc
-        echo "80";
-        source /etc/bash.bashrc >/dev/null 2>&1
-        echo "95";
-        echo "# Installation Done ..." ;
-        rm -rf /tmp/composer.phar >/dev/null 2>&1
-        zenity --info --width=280 --height=100 --timeout 60  --title="PHP-Composer" --text "<b>PHP Composer has been installed !</b>"
-    ) |
-            zenity --width=500 --progress \
-            --title="Installing PHP-Composer" \
-            --text="Please wait ..." \
-            --percentage=0 --auto-close
+            "${choices[@]}" \
+            False "Version Not Listed Here"`
 
-            if [[ $? -eq 1 ]]; then
+        if [[ $? -eq 1 ]]; then
 
-                zenity --width=200 --error \
-                --text="Installtion canceled."
+                # they pressed Cancel or closed the dialog window
+                zenity --error --title="Declined" --width=200 \
+                    --text="Installtion Canceled"
+                ins_del
+                exit 1
+        fi
 
-            fi
+        if [[ $choice == *"Version Not Listed Here"* ]]; then
+            php_comp_nl
+        elif [[ $choice == *"$choice"* ]]; then
+            php_comp_lst
+        else
+            zenity --error --width=150  --title="Error" --text "<b>Incorrect Selections !</b>"
+        fi
 }
 
 php_comp_chk(){
@@ -193,7 +275,7 @@ php_comp_chk(){
         	zenity --width=200 --error \
                 --text="<b>PHP is not installed!</b>"
         else
-      		php-comp
+      		php_comp
       	fi
 }
 
@@ -216,7 +298,7 @@ lan_las(){
         echo "# Installation Done ..." ; sleep 3
         rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
-        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+        zenity --info --width=150 --height=100 --timeout 15 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
@@ -227,6 +309,7 @@ lan_las(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 
@@ -259,7 +342,7 @@ lan_nl_in(){
             echo "# Installation Done ..." ; sleep 3
             rm -rf /tmp/$selver
             LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
-            zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+            zenity --info --width=150 --height=100 --timeout 15 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
@@ -270,6 +353,7 @@ lan_nl_in(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 }
@@ -288,7 +372,7 @@ lan_spc_l(){
         echo "# Installation Done ..." ; sleep 3
         rm -rf /tmp/$selver
         LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
-        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+        zenity --info --width=150 --height=100 --timeout 15 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
     ) |
             zenity --width=500 --progress \
             --title="Installing Lando" \
@@ -299,6 +383,7 @@ lan_spc_l(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 
@@ -325,6 +410,15 @@ lan_spc(){
             "${choices[@]}" \
             False "Version Not Listed Here"`
 
+        if [[ $? -eq 1 ]]; then
+
+                # they pressed Cancel or closed the dialog window
+                zenity --error --title="Declined" --width=200 \
+                    --text="Installtion Canceled"
+                ins_del
+
+                exit 1
+        fi
 
         if [[ $choice == *"Version Not Listed Here"* ]]; then
             lan_nl
@@ -352,6 +446,7 @@ lan_rm(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 
@@ -403,14 +498,14 @@ lan(){
 
 nj_rm(){
     (
-    echo "30";
-    echo "# Removing NodeJs ..." ; sleep 3
-    apt-get purge --auto-remove nodejs -y  >/dev/null 2>&1
-    echo "50";
-    echo "# Removing Related File ..." ; sleep 3
-    rm -rf /etc/apt/sources.list.d/nodesource.list
-    echo "95";
-    echo "# Removed NodeJs ..." ; sleep 3
+        echo "30";
+        echo "# Removing NodeJs ..." ; sleep 3
+        apt-get purge --auto-remove nodejs -y  >/dev/null 2>&1
+        echo "50";
+        echo "# Removing Related File ..." ; sleep 3
+        rm -rf /etc/apt/sources.list.d/nodesource.list
+        echo "95";
+        echo "# Removed NodeJs ..." ; sleep 3
     ) |
             zenity --width=500 --progress \
             --title="Removing NodeJs" \
@@ -421,6 +516,7 @@ nj_rm(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 
@@ -462,6 +558,7 @@ npm_bichk(){
 
                 zenity --width=200 --error \
                 --text="Installtion canceled."
+                ins_del
 
             fi
 
@@ -482,8 +579,44 @@ nj_chk(){
     fi
 }
 
+nj_in(){
+        (
+            echo "25";
+            echo "# Getting Data from NodeJs ..." ; sleep 3
+            ver=$(curl -s "https://nodejs.org/dist/latest-$choice/" | grep "node" | awk -F 'node-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}' | grep "linux-x64.tar.gz" | awk -F "-" '{print $1}')
+            selver=`echo "node-$ver-linux-x64.tar.gz"`
+
+            url="https://nodejs.org/dist/latest-$choice/$selver"
+            curl -o /tmp/$selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
+            echo "70";
+            echo "# Installing NodeJs ..." ; sleep 3
+            tar -C /usr/local --strip-components 1 -xzf /tmp/$selver >/dev/null
+            echo "80";
+            echo "# Installing NPM ..." ; sleep 3
+            npm_in
+            echo "95"
+            echo "# Installation Done ..." ; sleep 3
+            rm -rvf /tmp/$selver
+            NODE_VER=$(node -v)
+            NPM_VER=$(npm -v)
+
+            zenity --info --width=150 --height=100 --timeout 15  --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
+        ) |
+            zenity --width=500 --progress \
+            --title="Installing NodeJs" \
+            --text="Please Wait ..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installtion canceled."
+                ins_del
+
+            fi
+}
+
 nj(){
-    (
         nj_chk
         npm_bichk
         lst=$(curl -s "https://nodejs.org/dist/" | grep "latest" | awk -F 'latest-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}'  | sort -Vr )
@@ -502,42 +635,20 @@ nj(){
             --column "Select" \
             --column "Versions" \
             "${choices[@]}"`
-        IFS="$OLDIFS"
 
-        echo "25";
-        echo "# Getting Data from NodeJs ..." ; sleep 3
-        ver=$(curl -s "https://nodejs.org/dist/latest-$choice/" | grep "node" | awk -F 'node-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}' | grep "linux-x64.tar.gz" | awk -F "-" '{print $1}')
-        selver=`echo "node-$ver-linux-x64.tar.gz"`
+        if [[ $? -eq 1 ]]; then
 
-        url="https://nodejs.org/dist/latest-$choice/$selver"
-        curl -o /tmp/$selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
-        echo "70";
-        echo "# Installing NodeJs ..." ; sleep 3
-        tar -C /usr/local --strip-components 1 -xzf /tmp/$selver >/dev/null
-        echo "80";
-        echo "# Installing NPM ..." ; sleep 3
-        npm_in
-        echo "95"
-        echo "# Installation Done ..." ; sleep 3
-        rm -rvf /tmp/$selver
-        NODE_VER=$(node -v)
-        NPM_VER=$(npm -v)
+                # they pressed Cancel or closed the dialog window
+            zenity --error --title="Declined" --width=200 \
+                --text="Canceled Installtion"
+            ins_del
+            exit 1
 
-        zenity --info --width=150 --height=100 --timeout 60  --title="Version Details" --text "<b>NodeJS :</b> $NODE_VER\n \n <b>Npm :</b> $NPM_VER"
-
-    ) |
-            zenity --width=500 --progress \
-            --title="Installing NodeJs" \
-            --text="Please Wait ..." \
-            --percentage=0 --auto-close
-
-            if [[ $? -eq 1 ]]; then
-
-                zenity --width=200 --error \
-                --text="Installtion canceled."
-
-            fi
-
+        elif [ $choice == *"$choice"* ]]; then
+            nj_in
+        else
+            zenity --error --width=150  --title="Error" --text "<b>Incorrect Selections !</b>"
+        fi
 }
 
 MYS_CHK(){
@@ -600,7 +711,7 @@ EOF
 
                 zenity --width=200 --error \
                 --text="Uninstallation canceled."
-
+                ins_del
             fi
 }
 
@@ -650,7 +761,7 @@ MY_RMV(){
 
                 zenity --width=200 --error \
                 --text="Uninstallation canceled."
-
+                ins_del
             fi
 
 
@@ -677,7 +788,7 @@ MYS(){
             else
                 zenity --error --title="Declined" --width=200 \
                     --text="Installtion Canceled "
-
+                ins_del
             fi
 
 }
@@ -739,7 +850,7 @@ php5_6(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 
 }
@@ -802,7 +913,7 @@ php7_0(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 }
 
@@ -864,7 +975,7 @@ php7_1(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 
 }
@@ -926,7 +1037,7 @@ php7_2(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 }
 
@@ -997,7 +1108,7 @@ NG(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 }
 
@@ -1022,6 +1133,7 @@ mar(){
         if [[ $? -eq 1 ]]; then
             zenity --width=200 --error \
             --text="Installtion canceled."
+            ins_del
         fi
 
 }
@@ -1050,7 +1162,7 @@ DOCK_COMP(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 }
 
@@ -1134,27 +1246,18 @@ DOCK_IN(){
 
                 zenity --width=200 --error \
                 --text="Installation canceled."
-
+                ins_del
             fi
 
     else
 
         zenity --error --title="Declined" --width=200 \
                         --text="Installtaion Canceled "
+        ins_del
 
         exit 1 ;
 
     fi
-}
-
-ins_del(){
-    zenity --question --title="Exit" --width=350 --text="Are you sure, You want to delect this Script ?"
-    if [ $? = 0 ]; then
-        cd .. && rm -rf Software_Installtion-master*
-    else
-        exit;
-    fi
-
 }
 
 
@@ -1188,7 +1291,7 @@ ins(){
 
                 # they pressed Cancel or closed the dialog window
                 zenity --error --title="Declined" --width=200 \
-                    --text="Canceled Installtion"
+                    --text="Installtion Canceled"
                 ins_del
                 exit 1
             fi
