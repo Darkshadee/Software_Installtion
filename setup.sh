@@ -260,29 +260,53 @@ lan_las(){
 
 }
 
-lan_spc(){
+llan_nl(){
+
+        ver_ned=$(zenity --entry --width=200  --title "Lando" --text "Lando" --text="Enter Correct Version : ")
+        selver=`echo "lando-v$ver_ned.deb"`
+        lan_nl_url="https://github.com/lando/lando/releases/download/v$ver_ned/$selver"
+        # echo "$lan_nl_url"
+        if curl --output /dev/null --silent --head --fail "$lan_nl_url"; then
+            lan_nl_in
+        else
+            zenity --error --width=150  --title="Error" --text "<b>Incorrect Version !</b>"
+
+        fi
+
+}
+
+lan_nl_in(){
     (
-        lst_l=$(curl -s https://github.com/lando/lando/tags | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' )
+            echo "50";
+            echo "# Downloading Lando ..." ; sleep 3
+            wget $lan_nl_url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
+            echo "70";
+            echo "# Installing Lando ..." ; sleep 3
+            dpkg -i --ignore-depends=docker-ce /tmp/$selver > /dev/null 2>&1
+            echo "95";
+            echo "# Installation Done ..." ; sleep 3
+            rm -rf /tmp/$selver
+            LAN_VER=$(dpkg -s lando | grep "Version:" | awk '{print $2}')
+            zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Lando Ver : </b> $LAN_VER"
+    ) |
+            zenity --width=500 --progress \
+            --title="Installing Lando" \
+            --text="Please Wait ..." \
+            --percentage=0 --auto-close
 
-        choices=()
-        mode="true"
-        for name in $lst_l ; do
-            choices=("${choices[@]}" "$mode" "$name")
-            mode="false"
-        done
+            if [[ $? -eq 1 ]]; then
 
-        choice=`zenity --width=300 --height=380 \
-            --list \
-            --separator="$IFS" \
-            --radiolist \
-            --text="Select Versions:" \
-            --column "Select" \
-            --column "Versions" \
-            "${choices[@]}"`
-        IFS="$OLDIFS"
+                zenity --width=200 --error \
+                --text="Installtion canceled."
 
+            fi
+}
+
+lan_spc_l(){
+    (
         selver=`echo "lando-$choice.deb"`
         url="https://github.com/lando/lando/releases/download/$choice/$selver"
+        zenity --info --width=150 --height=100 --timeout 60 --title="Version Details" --text "<b>Url : </b> $url"
         echo "50";
         echo "# Downloading Lando ..." ; sleep 3
         wget $url -P /tmp/ 2>&1 | sed -u 's/.* \([0-9]\+%\)\ \+\([0-9.]\+.\) \(.*\)/\1\n# Downloading at \2\/s, ETA \3/' | zenity --progress --width=500 --auto-close  --title="Downloading Lando..."
@@ -306,6 +330,37 @@ lan_spc(){
                 --text="Installtion canceled."
 
             fi
+
+}
+
+
+lan_spc(){
+     lst_l=$(curl -s https://github.com/lando/lando/tags | grep "/lando/lando/releases/tag/v" | grep "<a href=" | sed 's|.*/||' | sed 's/.$//' | sed 's/.$//' )
+
+        choices=()
+        mode="true"
+        for name in $lst_l ; do
+            choices=("${choices[@]}" "$mode" "$name")
+            mode="false"
+        done
+
+        choice=`zenity --width=300 --height=380 \
+            --list \
+            --separator="$IFS" \
+            --radiolist \
+            --text="Select Versions:" \
+            --column "Select" \
+            --column "Versions" \
+            "${choices[@]}" \
+            False "Version Not Listed Here"`
+
+
+        if [[ $choice == *"Version Not Listed Here"* ]]; then
+            lan_nl
+        else
+            lan_spc_l
+        fi
+
 
 }
 
@@ -1211,6 +1266,7 @@ ins(){
                 Flag="--Lando"
                 lan
             fi
+
 
             # exit 0
     fi
