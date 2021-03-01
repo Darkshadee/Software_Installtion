@@ -587,7 +587,7 @@ nj_in(){
             selver=`echo "node-$ver-linux-x64.tar.gz"`
 
             url="https://nodejs.org/dist/latest-$choice/$selver"
-            curl -o /tmp/$selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading Lando"
+            curl -o /tmp/$selver $url 2>&1 | stdbuf -oL tr '\r' '\n' | sed -u 's/^ *\([0-9][0-9]*\).*\( [0-9].*$\)/\1\n#Download Speed\:\2/' | zenity --width=500 --progress --auto-close --title "Downloading NodeJs"
             echo "70";
             echo "# Installing NodeJs ..." ; sleep 3
             tar -C /usr/local --strip-components 1 -xzf /tmp/$selver >/dev/null
@@ -615,6 +615,42 @@ nj_in(){
 
             fi
 }
+
+nj(){
+        nj_chk
+        npm_bichk
+        lst=$(curl -s "https://nodejs.org/dist/" | grep "latest" | awk -F 'latest-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}'  | sort -Vr )
+        choices=()
+        mode="true"
+        for name in $lst ; do
+            choices=("${choices[@]}" "$mode" "$name")
+            mode="false"
+        done
+
+        choice=`zenity --width=300 --height=380 \
+            --list \
+            --separator="$IFS" \
+            --radiolist \
+            --text="Select Versions:" \
+            --column "Select" \
+            --column "Versions" \
+            "${choices[@]}"`
+
+        if [[ $? -eq 1 ]]; then
+
+                # they pressed Cancel or closed the dialog window
+            zenity --error --title="Declined" --width=200 \
+                --text="Canceled Installtion"
+            ins_del
+            exit 1
+
+        elif [[ $choice == *"$choice"* ]]; then
+            nj_in
+        else
+            zenity --error --width=150  --title="Error" --text "<b>Incorrect Selections !</b>"
+        fi
+}
+
 
 git_rm(){
     (
@@ -759,42 +795,6 @@ git_main(){
         gitk_ins
     fi
 
-}
-
-
-nj(){
-        nj_chk
-        npm_bichk
-        lst=$(curl -s "https://nodejs.org/dist/" | grep "latest" | awk -F 'latest-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}'  | sort -Vr )
-        choices=()
-        mode="true"
-        for name in $lst ; do
-            choices=("${choices[@]}" "$mode" "$name")
-            mode="false"
-        done
-
-        choice=`zenity --width=300 --height=380 \
-            --list \
-            --separator="$IFS" \
-            --radiolist \
-            --text="Select Versions:" \
-            --column "Select" \
-            --column "Versions" \
-            "${choices[@]}"`
-
-        if [[ $? -eq 1 ]]; then
-
-                # they pressed Cancel or closed the dialog window
-            zenity --error --title="Declined" --width=200 \
-                --text="Canceled Installtion"
-            ins_del
-            exit 1
-
-        elif [[ $choice == *"$choice"* ]]; then
-            nj_in
-        else
-            zenity --error --width=150  --title="Error" --text "<b>Incorrect Selections !</b>"
-        fi
 }
 
 MYS_CHK(){
