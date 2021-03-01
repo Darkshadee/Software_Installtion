@@ -616,6 +616,152 @@ nj_in(){
             fi
 }
 
+git_rm(){
+    (
+        echo "50";
+        echo "# Removing Git ...";
+        apt-get purge git -y >/dev/null 2>&1
+        echo "95";
+        echo "# Removed ! ..."; sleep 5;
+    ) |
+         zenity --width=500 --progress \
+            --title="Removing Git" \
+            --text="Removing Git..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Uninstallation canceled."
+                # ins_del
+            fi
+}
+
+gitk_rm(){
+    (
+        echo "50";
+        echo "# Removing Gitk ...";
+        apt-get purge gitk -y >/dev/null 2>&1
+        echo "95";
+        echo "# Removed ! ..."; sleep 5;
+    ) |
+         zenity --width=500 --progress \
+            --title="Removing Gitk" \
+            --text="Removing Gitk..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Uninstallation canceled."
+                # ins_del
+            fi
+}
+
+git_rm_cf(){
+    zenity --question --title="Git Installation" --width=250 --text="<b>Git is already installed !</b> \n\nDo you want to remove it ?"
+    if [ $? = 0 ]; then
+        git_rm
+        gt_ans="Yes"
+    else
+        gt_ans="No"
+    fi
+}
+
+gitk_rm_cf(){
+    zenity --question --title="Git Installation" --width=250 --text="<b>Gitk is already installed !</b> \n\nDo you want to remove it ?"
+    if [ $? = 0 ]; then
+        gitk_rm
+        gtk_ans="Yes"
+    else
+        gtk_ans="No"
+    fi
+}
+
+
+
+git_chk(){
+    pkgs='git'
+    pkgs2='gitk'
+
+	if dpkg -s $pkgs >/dev/null 2>&1; then
+		git_rm_cf
+    else
+        gt_ans="Yes"
+    fi
+
+    if dpkg -s $pkgs2 >/dev/null 2>&1; then
+        gitk_rm_cf
+    else
+        gtk_ans="Yes"
+    fi
+}
+
+git_ins(){
+    (
+        echo "15";
+        echo "# Getting Ready for installtion ..."; sleep 5
+        echo "50";
+        echo  "# Installing Git ...";
+        apt-get install git-all -y >/dev/null 2>&1
+        echo "90";
+        echo  "# Almost Done ...";
+        GIT_VER=$(git --version)
+        zenity --info --width=150 --height=100 --timeout 15  --title="Version Details" --text "<b>Installed Version !</b> \n\n$GIT_VER"
+    ) |
+         zenity --width=500 --progress \
+            --title="Installing Git" \
+            --text="Installing Git..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installation canceled."
+                # ins_del
+            fi
+
+}
+
+gitk_ins(){
+    (
+        echo "15";
+        echo "# Getting Ready for installtion ..."; sleep 5
+        echo "50";
+        echo  "# Installing Gitk ...";
+        apt-get install gitk -y >/dev/null 2>&1
+        echo "90";
+        echo  "# Almost Done ...";
+        GITK_VER=$(dpkg -s git | grep "Version: 1:" | awk '{print $2}' | awk -F ':' '{print $2}' | awk -F '-' '{print $1}')
+        zenity --info --width=150 --height=100 --timeout 15  --title="Version Details" --text "<b>Installed Version !</b> \n\nGitk Version: $GITK_VER"
+    ) |
+         zenity --width=500 --progress \
+            --title="Installing Gitk" \
+            --text="Installing Gitk..." \
+            --percentage=0 --auto-close
+
+            if [[ $? -eq 1 ]]; then
+
+                zenity --width=200 --error \
+                --text="Installation canceled."
+                # ins_del
+            fi
+}
+
+git_main(){
+        git_chk
+
+    if [[ $gt_ans == "Yes" ]]; then
+        git_ins
+    fi
+
+    if [[ $gtk_ans == "Yes" ]]; then
+        gitk_ins
+    fi
+
+}
+
+
 nj(){
         nj_chk
         npm_bichk
@@ -1284,7 +1430,8 @@ ins(){
                 " " "Composer (php)" \
                 " " "Nginx" \
                 " " "Docker" \
-                " " "Lando"
+                " " "Lando" \
+                " " "Git"
                 )
 
             if [[ $? -eq 1 ]]; then
@@ -1350,6 +1497,13 @@ ins(){
                 # they selected the short radio button
                 Flag="--Lando"
                 lan
+            fi
+
+            if [[ $ListType == *"Git"* ]]; then
+
+                # they selected the short radio button
+                Flag="--Git"
+                git_main
             fi
 
 
