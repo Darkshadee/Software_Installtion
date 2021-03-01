@@ -790,7 +790,7 @@ nj(){
             ins_del
             exit 1
 
-        elif [ $choice == *"$choice"* ]; then
+        elif [[ $choice == *"$choice"* ]]; then
             nj_in
         else
             zenity --error --width=150  --title="Error" --text "<b>Incorrect Selections !</b>"
