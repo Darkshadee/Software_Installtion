@@ -617,6 +617,7 @@ nj_in(){
 }
 
 nj(){
+	cl
         nj_chk
         npm_bichk
         lst=$(curl -s "https://nodejs.org/dist/" | grep "latest" | awk -F 'latest-' '{print $2 FS "/"}' | grep "v" | awk -F "/" '{print $1}'  | sort -Vr )
